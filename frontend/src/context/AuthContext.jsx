@@ -36,7 +36,7 @@ export const AuthProvider = ({ children }) => {
       const userData = await authService.getCurrentUser();
       
       console.log('👨‍💻 Estableciendo usuario en contexto:', userData);
-      setUser(userData);
+      setUser(userData.user);
       
       return { success: true };
       
@@ -73,7 +73,7 @@ export const AuthProvider = ({ children }) => {
       authService.getCurrentUser()
         .then((userData) => {
           console.log('✅ Token válido, usuario cargado:', userData);
-          setUser(userData);
+          setUser(userData.user);
         })
         .catch((error) => {
           console.warn('⚠️ Token inválido, eliminando:', error.response?.status);
