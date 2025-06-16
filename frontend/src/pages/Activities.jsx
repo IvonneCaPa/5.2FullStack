@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import activityService from '../services/activityService';
+import { useAuth } from '../context/AuthContext';
 
 const ACTIVITIES_PER_PAGE = 6;
 
 const Activities = () => {
+    const { user } = useAuth();
+    const isAdmin = user?.role === 'admin';
     const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -142,13 +145,22 @@ const Activities = () => {
             <div className="w-full max-w-4xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
                     <h1 className="text-3xl font-bold text-orange-600 drop-shadow mb-2 md:mb-0">Gestión de Actividades</h1>
-                    <button
-                        onClick={() => setShowForm(!showForm)}
-                        className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded font-semibold shadow transition"
-                    >
-                        {showForm ? 'Cancelar' : 'Nueva Actividad'}
-                    </button>
+                    {isAdmin && (
+                        <button
+                            onClick={() => setShowForm(!showForm)}
+                            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded font-semibold shadow transition"
+                        >
+                            {showForm ? 'Cancelar' : 'Nueva Actividad'}
+                        </button>
+                    )}
                 </div>
+
+                {/* Mensaje de advertencia para usuarios sin permisos */}
+                {!isAdmin && (
+                    <div className="mb-6 p-4 bg-red-100 text-red-800 border border-red-300 rounded text-center font-semibold shadow">
+                        No tienes permisos para crear, editar o eliminar actividades.
+                    </div>
+                )}
 
                 {/* Barra de búsqueda */}
                 <div className="mb-6 flex gap-2 max-w-xl mx-auto">
@@ -174,7 +186,7 @@ const Activities = () => {
                     </div>
                 )}
 
-                {showForm && (
+                {showForm && isAdmin && (
                     <form onSubmit={handleSubmit} className="mb-10 bg-white rounded-xl shadow-lg p-8 border border-orange-200 w-full">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
@@ -259,20 +271,22 @@ const Activities = () => {
                                             <span className="font-semibold">Sitio:</span> {activity.site}
                                         </div>
                                     </div>
-                                    <div className="flex justify-end gap-2 mt-4">
-                                        <button
-                                            onClick={() => handleEdit(activity)}
-                                            className="px-4 py-1 bg-orange-400 hover:bg-orange-500 text-white rounded font-semibold shadow transition"
-                                        >
-                                            Editar
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(activity.id)}
-                                            className="px-4 py-1 bg-red-500 hover:bg-red-600 text-white rounded font-semibold shadow transition"
-                                        >
-                                            Eliminar
-                                        </button>
-                                    </div>
+                                    {isAdmin && (
+                                        <div className="flex justify-end gap-2 mt-4">
+                                            <button
+                                                onClick={() => handleEdit(activity)}
+                                                className="px-4 py-1 bg-orange-400 hover:bg-orange-500 text-white rounded font-semibold shadow transition"
+                                            >
+                                                Editar
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(activity.id)}
+                                                className="px-4 py-1 bg-red-500 hover:bg-red-600 text-white rounded font-semibold shadow transition"
+                                            >
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             ))}
                         </div>
