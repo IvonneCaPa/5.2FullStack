@@ -11,7 +11,7 @@ const Dashboard = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200 py-8 px-2">
       <div className="w-full max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8 border border-orange-200 flex flex-col items-center">
         <h1 className="text-3xl font-bold text-orange-600 mb-6 drop-shadow">Dashboard</h1>
-        <div className="flex gap-4 mb-6">
+        <div className="flex gap-4 mb-6 flex-wrap justify-center">
           <button
             className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded font-semibold transition shadow"
             onClick={() => navigate('/users')}
@@ -23,6 +23,12 @@ const Dashboard = () => {
             onClick={() => navigate('/activities')}
           >
             Gestión de actividades
+          </button>
+          <button
+            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded font-semibold transition shadow"
+            onClick={() => navigate('/galleries')}
+          >
+            Gestión de galerías
           </button>
         </div>
         <div className="w-full max-w-md bg-orange-50 rounded-lg p-6 mb-6 shadow border border-orange-100">
