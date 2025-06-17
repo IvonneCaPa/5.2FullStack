@@ -6,12 +6,17 @@ const GalleryForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
+    title: '',
+    date: '',
+    site: ''
   });
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [imageError, setImageError] = useState(null);
+
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+  const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
   useEffect(() => {
     if (id) {
@@ -24,8 +29,9 @@ const GalleryForm = () => {
       setLoading(true);
       const data = await galleryService.getGalleryById(id);
       setFormData({
-        name: data.name,
-        description: data.description,
+        title: data.title,
+        date: data.date ? data.date.slice(0, 10) : '', // Solo YYYY-MM-DD
+        site: data.site
       });
       setError(null);
     } catch (err) {
@@ -44,28 +50,71 @@ const GalleryForm = () => {
     }));
   };
 
+  const validateFile = (file) => {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return 'El archivo debe ser una imagen (jpeg, jpg, png, gif, webp)';
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      return 'El archivo no puede ser mayor a 10MB';
+    }
+    return null;
+  };
+
   const handleImageChange = (e) => {
-    setImages(Array.from(e.target.files));
+    const files = Array.from(e.target.files);
+    setImageError(null);
+
+    // Validar cada archivo
+    for (const file of files) {
+      const error = validateFile(file);
+      if (error) {
+        setImageError(error);
+        e.target.value = ''; // Limpiar el input
+        return;
+      }
+    }
+
+    setImages(files);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       setLoading(true);
+      setError(null);
+      
+      // Asegurarnos de que la fecha está en el formato correcto (YYYY-MM-DD)
+      const formattedData = {
+        ...formData,
+        date: new Date(formData.date).toISOString().split('T')[0]
+      };
+
       if (id) {
-        await galleryService.updateGallery(id, formData);
+        await galleryService.updateGallery(id, formattedData);
         if (images.length > 0) {
-          await galleryService.uploadImages(id, images);
+          try {
+            await galleryService.uploadImages(id, images);
+          } catch (uploadError) {
+            setError('Error al subir las imágenes: ' + uploadError.message);
+            console.error('Error al subir imágenes:', uploadError);
+            return;
+          }
         }
       } else {
-        const newGallery = await galleryService.createGallery(formData);
+        const newGallery = await galleryService.createGallery(formattedData);
         if (images.length > 0) {
-          await galleryService.uploadImages(newGallery.id, images);
+          try {
+            await galleryService.uploadImages(newGallery.id, images);
+          } catch (uploadError) {
+            setError('Error al subir las imágenes: ' + uploadError.message);
+            console.error('Error al subir imágenes:', uploadError);
+            return;
+          }
         }
       }
       navigate('/galleries');
     } catch (err) {
-      setError('Error al guardar la galería');
+      setError('Error al guardar la galería: ' + err.message);
       console.error(err);
     } finally {
       setLoading(false);
@@ -78,44 +127,63 @@ const GalleryForm = () => {
     <div className="gallery-form">
       <h2>{id ? 'Editar Galería' : 'Nueva Galería'}</h2>
       {error && <div className="error">{error}</div>}
+      {imageError && <div className="error">{imageError}</div>}
       
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="name">Nombre:</label>
+          <label htmlFor="title">Título:</label>
           <input
             type="text"
-            id="name"
-            name="name"
-            value={formData.name}
+            id="title"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            required
+            maxLength={20}
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="date">Fecha:</label>
+          <input
+            type="date"
+            id="date"
+            name="date"
+            value={formData.date}
             onChange={handleChange}
             required
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="description">Descripción:</label>
-          <textarea
-            id="description"
-            name="description"
-            value={formData.description}
+          <label htmlFor="site">Sitio:</label>
+          <input
+            type="text"
+            id="site"
+            name="site"
+            value={formData.site}
             onChange={handleChange}
             required
+            maxLength={45}
           />
         </div>
 
         <div className="form-group">
-          <label htmlFor="images">Imágenes:</label>
+          <label htmlFor="images">
+            Imágenes: 
+            <small> (Formatos permitidos: JPEG, JPG, PNG, GIF, WEBP. Tamaño máximo: 10MB)</small>
+          </label>
           <input
             type="file"
             id="images"
             multiple
-            accept="image/*"
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
             onChange={handleImageChange}
           />
         </div>
 
         <div className="form-actions">
-          <button type="submit" disabled={loading}>
+          <button type="submit" disabled={loading || imageError}>
             {loading ? 'Guardando...' : 'Guardar'}
           </button>
           <button type="button" onClick={() => navigate('/galleries')}>

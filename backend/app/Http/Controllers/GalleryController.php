@@ -27,7 +27,7 @@ class GalleryController extends Controller
     public function index()
     {
         return response([
-            'galleries'=> new GalleryResource(Gallery::all())
+            'galleries'=> GalleryResource::collection(Gallery::all())
         ]);
     }
 

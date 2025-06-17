@@ -17,8 +17,19 @@ class Gallery extends Model
     ];
 
     protected $casts = [
-        'date' => 'date',
+        'date' => 'date:Y-m-d',
     ];
+
+    /**
+     * Get the date format for storage.
+     *
+     * @return string
+     */
+    protected function serializeDate($date)
+    {
+        return $date->format('Y-m-d');
+    }
+
     /**
      * Get the images for the gallery.
      */

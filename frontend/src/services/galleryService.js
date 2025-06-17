@@ -54,26 +54,31 @@ const galleryService = {
   // Subir imágenes a una galería
   uploadImages: async (galleryId, images) => {
     try {
-      const formData = new FormData();
-      images.forEach((image) => {
-        formData.append('images[]', image);
+      const uploadPromises = images.map((image, index) => {
+        const formData = new FormData();
+        formData.append('location', image);
+        formData.append('gallery_id', galleryId);
+        formData.append('title', `${image.name.split('.')[0]}`); // Usar el nombre del archivo como título
+        
+        return api.post('/photos', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
       });
       
-      const response = await api.post(`/galleries/${galleryId}/images`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      return response.data;
+      const responses = await Promise.all(uploadPromises);
+      return responses.map(response => response.data);
     } catch (error) {
+      console.error('Error al subir imágenes:', error.response?.data || error);
       throw error;
     }
   },
 
   // Eliminar una imagen de una galería
-  deleteImage: async (galleryId, imageId) => {
+  deleteImage: async (photoId) => {
     try {
-      const response = await api.delete(`/galleries/${galleryId}/images/${imageId}`);
+      const response = await api.delete(`/photos/${photoId}`);
       return response.data;
     } catch (error) {
       throw error;
