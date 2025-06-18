@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import Modal from '../components/Modal';
 import Loader from '../components/Loader';
+import Table from '../components/Table';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 
 const ACTIVITIES_PER_PAGE = 6;
 
@@ -22,8 +24,6 @@ const Activities = () => {
     });
     const [editingId, setEditingId] = useState(null);
     const [showForm, setShowForm] = useState(false);
-    const [search, setSearch] = useState('');
-    const [filteredActivities, setFilteredActivities] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const [modalOpen, setModalOpen] = useState(false);
     const [activityToDelete, setActivityToDelete] = useState(null);
@@ -31,11 +31,6 @@ const Activities = () => {
     useEffect(() => {
         loadActivities();
     }, []);
-
-    useEffect(() => {
-        handleFilter();
-        setCurrentPage(1);
-    }, [activities]);
 
     const loadActivities = async () => {
         try {
@@ -115,28 +110,8 @@ const Activities = () => {
         setShowForm(false);
     };
 
-    const handleFilter = () => {
-        if (!search.trim()) {
-            setFilteredActivities(activities);
-        } else {
-            const lower = search.toLowerCase();
-            setFilteredActivities(
-                activities.filter(
-                    (a) =>
-                        a.title.toLowerCase().includes(lower) ||
-                        a.description.toLowerCase().includes(lower)
-                )
-            );
-        }
-        setCurrentPage(1);
-    };
-
-    useEffect(() => {
-        handleFilter();
-    }, [search, activities]);
-
-    const totalPages = Math.ceil(filteredActivities.length / ACTIVITIES_PER_PAGE);
-    const paginatedActivities = filteredActivities.slice(
+    const totalPages = Math.ceil(activities.length / ACTIVITIES_PER_PAGE);
+    const paginatedActivities = activities.slice(
         (currentPage - 1) * ACTIVITIES_PER_PAGE,
         currentPage * ACTIVITIES_PER_PAGE
     );
@@ -147,6 +122,33 @@ const Activities = () => {
     const handleNextPage = () => {
         setCurrentPage((prev) => Math.min(prev + 1, totalPages));
     };
+
+    // Columnas para la tabla
+    const columns = [
+        { label: 'Título', field: 'title' },
+        { label: 'Descripción', field: 'description' },
+        { label: 'Fecha', field: 'dateTime', render: (a) => new Date(a.dateTime).toLocaleDateString() },
+        { label: 'Sitio', field: 'site' },
+        {
+            label: 'Acciones',
+            render: (activity) => (
+                <>
+                    <button
+                        className="bg-orange-400 hover:bg-orange-500 text-white px-3 py-1 rounded mr-2 font-semibold transition flex items-center gap-2"
+                        onClick={() => handleEdit(activity)}
+                    >
+                        <FaEdit /> Editar
+                    </button>
+                    <button
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded font-semibold transition flex items-center gap-2"
+                        onClick={() => { setActivityToDelete(activity); setModalOpen(true); }}
+                    >
+                        <FaTrash /> Eliminar
+                    </button>
+                </>
+            ),
+        },
+    ];
 
     if (loading) return <Loader />;
 
@@ -172,24 +174,6 @@ const Activities = () => {
                     </div>
                 )}
 
-                {/* Barra de búsqueda */}
-                <div className="mb-6 flex gap-2 max-w-xl mx-auto">
-                    <input
-                        type="text"
-                        placeholder="Buscar por título o descripción"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="border border-orange-300 px-3 py-2 rounded w-full focus:ring-2 focus:ring-orange-400 focus:outline-none"
-                    />
-                    <button
-                        className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded font-semibold transition"
-                        onClick={handleFilter}
-                        type="button"
-                    >
-                        Buscar
-                    </button>
-                </div>
-
                 {showForm && isAdmin && (
                     <form onSubmit={handleSubmit} className="mb-10 bg-white rounded-xl shadow-lg p-8 border border-orange-200 w-full">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -205,9 +189,9 @@ const Activities = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block mb-2 font-semibold text-orange-700">Fecha y hora:</label>
+                                <label className="block mb-2 font-semibold text-orange-700">Fecha:</label>
                                 <input
-                                    type="datetime-local"
+                                    type="date"
                                     name="dateTime"
                                     value={formData.dateTime}
                                     onChange={handleInputChange}
@@ -222,11 +206,10 @@ const Activities = () => {
                                     value={formData.description}
                                     onChange={handleInputChange}
                                     className="w-full p-3 border border-orange-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-400"
-                                    rows="3"
                                     required
                                 />
                             </div>
-                            <div>
+                            <div className="md:col-span-2">
                                 <label className="block mb-2 font-semibold text-orange-700">Sitio:</label>
                                 <input
                                     type="text"
@@ -234,66 +217,37 @@ const Activities = () => {
                                     value={formData.site}
                                     onChange={handleInputChange}
                                     className="w-full p-3 border border-orange-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-400"
+                                    required
                                 />
                             </div>
                         </div>
-                        <div className="mt-6 flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={resetForm}
-                                className="px-6 py-2 border border-orange-400 text-orange-600 rounded font-semibold hover:bg-orange-50 transition"
-                            >
-                                Cancelar
-                            </button>
+                        <div className="flex gap-2 mt-6 justify-end">
                             <button
                                 type="submit"
-                                className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded font-semibold shadow transition"
+                                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded font-semibold shadow transition"
                             >
-                                {editingId ? 'Actualizar' : 'Crear'}
+                                {editingId ? 'Guardar cambios' : 'Crear actividad'}
                             </button>
+                            {editingId && (
+                                <button
+                                    type="button"
+                                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded font-semibold shadow transition"
+                                    onClick={resetForm}
+                                >
+                                    Cancelar
+                                </button>
+                            )}
                         </div>
-                        {error && <div className="text-red-500 mt-4 font-semibold">{error}</div>}
                     </form>
                 )}
 
                 {loading ? (
                     <div className="text-center text-orange-600 font-semibold p-4">Cargando...</div>
-                ) : filteredActivities.length === 0 ? (
+                ) : activities.length === 0 ? (
                     <div className="text-center text-orange-500 font-semibold p-4">No hay actividades registradas.</div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
-                            {paginatedActivities.map(activity => (
-                                <div key={activity.id} className="bg-white rounded-xl shadow-lg p-6 border border-orange-200 flex flex-col justify-between h-full">
-                                    <div>
-                                        <h3 className="text-xl font-bold text-orange-700 mb-2">{activity.title}</h3>
-                                        <p className="text-gray-700 mb-2">{activity.description}</p>
-                                        <div className="text-sm text-orange-600 mb-1">
-                                            <span className="font-semibold">Fecha y hora:</span> {new Date(activity.dateTime).toLocaleString()}
-                                        </div>
-                                        <div className="text-sm text-orange-600 mb-4">
-                                            <span className="font-semibold">Sitio:</span> {activity.site}
-                                        </div>
-                                    </div>
-                                    {isAdmin && (
-                                        <div className="flex justify-end gap-2 mt-4">
-                                            <button
-                                                onClick={() => handleEdit(activity)}
-                                                className="px-4 py-1 bg-orange-400 hover:bg-orange-500 text-white rounded font-semibold shadow transition"
-                                            >
-                                                Editar
-                                            </button>
-                                            <button
-                                                onClick={() => { setActivityToDelete(activity); setModalOpen(true); }}
-                                                className="px-4 py-1 bg-red-500 hover:bg-red-600 text-white rounded font-semibold shadow transition"
-                                            >
-                                                Eliminar
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
+                        <Table columns={columns} data={activities} rowsPerPage={6} />
                         {/* Paginación */}
                         <div className="flex justify-center items-center gap-4 mb-8">
                             <button
