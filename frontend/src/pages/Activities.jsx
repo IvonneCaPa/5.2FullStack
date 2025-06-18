@@ -5,7 +5,42 @@ import { useToast } from '../components/ToastProvider';
 import Modal from '../components/Modal';
 import Loader from '../components/Loader';
 import Table from '../components/Table';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaHeading, FaRegCalendarAlt, FaMapMarkerAlt, FaAlignLeft } from 'react-icons/fa';
+import FormReusable from '../components/FormReusable';
+
+const activityFields = (editingId) => [
+  {
+    name: 'title',
+    type: 'text',
+    placeholder: 'Título',
+    required: true,
+    icon: <FaHeading />,
+    maxLength: 100,
+  },
+  {
+    name: 'description',
+    type: 'text',
+    placeholder: 'Descripción',
+    required: true,
+    icon: <FaAlignLeft />,
+    maxLength: 255,
+  },
+  {
+    name: 'dateTime',
+    type: 'date',
+    placeholder: 'Fecha',
+    required: true,
+    icon: <FaRegCalendarAlt />,
+  },
+  {
+    name: 'site',
+    type: 'text',
+    placeholder: 'Sitio',
+    required: false,
+    icon: <FaMapMarkerAlt />,
+    maxLength: 100,
+  },
+];
 
 const ACTIVITIES_PER_PAGE = 6;
 
@@ -24,9 +59,10 @@ const Activities = () => {
     });
     const [editingId, setEditingId] = useState(null);
     const [showForm, setShowForm] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
     const [modalOpen, setModalOpen] = useState(false);
     const [activityToDelete, setActivityToDelete] = useState(null);
+    const [creating, setCreating] = useState(false);
+    const [formError, setFormError] = useState('');
 
     useEffect(() => {
         loadActivities();
@@ -49,33 +85,6 @@ const Activities = () => {
         }
     };
 
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            if (editingId) {
-                await activityService.update(editingId, formData);
-                toast('Actividad editada correctamente', 'success');
-            } else {
-                await activityService.create(formData);
-                toast('Actividad creada correctamente', 'success');
-            }
-            await loadActivities();
-            resetForm();
-        } catch (err) {
-            setError('Error al guardar la actividad');
-            toast('Error al guardar la actividad', 'error');
-            console.error(err);
-        }
-    };
-
     const handleEdit = (activity) => {
         setFormData({
             title: activity.title,
@@ -85,6 +94,42 @@ const Activities = () => {
         });
         setEditingId(activity.id);
         setShowForm(true);
+        setFormError('');
+    };
+
+    const handleCancelEdit = () => {
+        setFormData({
+            title: '',
+            description: '',
+            dateTime: '',
+            site: '',
+        });
+        setEditingId(null);
+        setShowForm(false);
+        setFormError('');
+    };
+
+    const handleSubmit = async (data) => {
+        setFormError('');
+        setCreating(true);
+        try {
+            if (editingId) {
+                await activityService.update(editingId, data);
+                toast('Actividad editada correctamente', 'success');
+            } else {
+                await activityService.create(data);
+                toast('Actividad creada correctamente', 'success');
+            }
+            await loadActivities();
+            handleCancelEdit();
+        } catch (err) {
+            setError('Error al guardar la actividad');
+            setFormError('Error al guardar la actividad');
+            toast('Error al guardar la actividad', 'error');
+            console.error(err);
+        } finally {
+            setCreating(false);
+        }
     };
 
     const handleDelete = async (activity) => {
@@ -97,30 +142,6 @@ const Activities = () => {
             toast('Error al eliminar la actividad', 'error');
             console.error(err);
         }
-    };
-
-    const resetForm = () => {
-        setFormData({
-            title: '',
-            description: '',
-            dateTime: '',
-            site: '',
-        });
-        setEditingId(null);
-        setShowForm(false);
-    };
-
-    const totalPages = Math.ceil(activities.length / ACTIVITIES_PER_PAGE);
-    const paginatedActivities = activities.slice(
-        (currentPage - 1) * ACTIVITIES_PER_PAGE,
-        currentPage * ACTIVITIES_PER_PAGE
-    );
-
-    const handlePrevPage = () => {
-        setCurrentPage((prev) => Math.max(prev - 1, 1));
-    };
-    const handleNextPage = () => {
-        setCurrentPage((prev) => Math.min(prev + 1, totalPages));
     };
 
     // Columnas para la tabla
@@ -159,7 +180,10 @@ const Activities = () => {
                     <h1 className="text-3xl font-bold text-orange-600 drop-shadow mb-2 md:mb-0">Gestión de Actividades</h1>
                     {isAdmin && (
                         <button
-                            onClick={() => setShowForm(!showForm)}
+                            onClick={() => {
+                                setShowForm(!showForm);
+                                if (!showForm) handleCancelEdit();
+                            }}
                             className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded font-semibold shadow transition"
                         >
                             {showForm ? 'Cancelar' : 'Nueva Actividad'}
@@ -174,71 +198,18 @@ const Activities = () => {
                     </div>
                 )}
 
+                {/* Formulario de actividad */}
                 {showForm && isAdmin && (
-                    <form onSubmit={handleSubmit} className="mb-10 bg-white rounded-xl shadow-lg p-8 border border-orange-200 w-full">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block mb-2 font-semibold text-orange-700">Título:</label>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    value={formData.title}
-                                    onChange={handleInputChange}
-                                    className="w-full p-3 border border-orange-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-400"
-                                    required
-                                />
-                            </div>
-                            <div>
-                                <label className="block mb-2 font-semibold text-orange-700">Fecha:</label>
-                                <input
-                                    type="date"
-                                    name="dateTime"
-                                    value={formData.dateTime}
-                                    onChange={handleInputChange}
-                                    className="w-full p-3 border border-orange-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-400"
-                                    required
-                                />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="block mb-2 font-semibold text-orange-700">Descripción:</label>
-                                <textarea
-                                    name="description"
-                                    value={formData.description}
-                                    onChange={handleInputChange}
-                                    className="w-full p-3 border border-orange-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-400"
-                                    required
-                                />
-                            </div>
-                            <div className="md:col-span-2">
-                                <label className="block mb-2 font-semibold text-orange-700">Sitio:</label>
-                                <input
-                                    type="text"
-                                    name="site"
-                                    value={formData.site}
-                                    onChange={handleInputChange}
-                                    className="w-full p-3 border border-orange-200 rounded focus:outline-none focus:ring-2 focus:ring-orange-400"
-                                    required
-                                />
-                            </div>
-                        </div>
-                        <div className="flex gap-2 mt-6 justify-end">
-                            <button
-                                type="submit"
-                                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded font-semibold shadow transition"
-                            >
-                                {editingId ? 'Guardar cambios' : 'Crear actividad'}
-                            </button>
-                            {editingId && (
-                                <button
-                                    type="button"
-                                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded font-semibold shadow transition"
-                                    onClick={resetForm}
-                                >
-                                    Cancelar
-                                </button>
-                            )}
-                        </div>
-                    </form>
+                    <FormReusable
+                        fields={activityFields(editingId)}
+                        initialValues={formData}
+                        onSubmit={handleSubmit}
+                        submitText={editingId ? 'Guardar cambios' : 'Crear actividad'}
+                        loading={creating}
+                        error={formError}
+                        cancelText={editingId ? 'Cancelar' : 'Cerrar'}
+                        onCancel={handleCancelEdit}
+                    />
                 )}
 
                 {loading ? (
@@ -249,35 +220,41 @@ const Activities = () => {
                     <>
                         <Table columns={columns} data={activities} rowsPerPage={6} />
                         {/* Paginación */}
-                        <div className="flex justify-center items-center gap-4 mb-8">
-                            <button
-                                onClick={handlePrevPage}
-                                disabled={currentPage === 1}
-                                className={`px-4 py-2 rounded font-semibold border border-orange-400 text-orange-600 bg-white shadow transition ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-orange-50'}`}
-                            >
-                                Anterior
-                            </button>
-                            <span className="font-semibold text-orange-700">
-                                Página {currentPage} de {totalPages}
-                            </span>
-                            <button
-                                onClick={handleNextPage}
-                                disabled={currentPage === totalPages}
-                                className={`px-4 py-2 rounded font-semibold border border-orange-400 text-orange-600 bg-white shadow transition ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-orange-50'}`}
-                            >
-                                Siguiente
-                            </button>
-                        </div>
+                        <div className="flex justify-center items-center gap-4 mb-8"></div>
                     </>
                 )}
+
+                {/* Modal de confirmación para eliminar */}
+                <Modal
+                    isOpen={modalOpen}
+                    onClose={() => setModalOpen(false)}
+                    title="Confirmar Eliminación"
+                >
+                    <div className="p-6">
+                        <p className="text-gray-700 mb-6">
+                            ¿Estás seguro de que deseas eliminar la actividad "{activityToDelete?.title}"?
+                            Esta acción no se puede deshacer.
+                        </p>
+                        <div className="flex justify-end gap-4">
+                            <button
+                                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition"
+                                onClick={() => setModalOpen(false)}
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                                onClick={() => {
+                                    handleDelete(activityToDelete);
+                                    setModalOpen(false);
+                                }}
+                            >
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </Modal>
             </div>
-            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Confirmar eliminación">
-                <p>¿Estás seguro de que deseas eliminar la actividad <b>{activityToDelete?.title}</b>?</p>
-                <div className="flex justify-end gap-4 mt-6">
-                    <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>Cancelar</button>
-                    <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded" onClick={async () => { await handleDelete(activityToDelete); setModalOpen(false); }}>Eliminar</button>
-                </div>
-            </Modal>
         </div>
     );
 };
