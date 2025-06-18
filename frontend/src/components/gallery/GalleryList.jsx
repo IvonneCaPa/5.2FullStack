@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import galleryService from '../../services/galleryService';
 import { useToast } from '../ToastProvider';
 import Modal from '../Modal';
+import Loader from '../Loader';
 
 const GALLERIES_PER_PAGE = 6;
 
@@ -88,11 +89,7 @@ const GalleryList = () => {
     }
   };
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200">
-      <div className="text-xl text-orange-600 font-semibold">Cargando galerías...</div>
-    </div>
-  );
+  if (loading) return <Loader />;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200 py-8 px-2">

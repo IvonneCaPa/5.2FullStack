@@ -3,6 +3,7 @@ import { userService } from '../services/user';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import Modal from '../components/Modal';
+import Loader from '../components/Loader';
 
 const initialForm = {
   name: '',
@@ -141,6 +142,8 @@ const Users = () => {
 
   const isAdmin = currentUser?.role === 'admin';
 
+  if (loading) return <Loader />;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200 py-8 px-2">
       <div className="w-full max-w-5xl mx-auto">
@@ -240,7 +243,6 @@ const Users = () => {
             </form>
           </div>
         )}
-        {loading && <p className="text-center text-orange-500 font-semibold">Cargando...</p>}
         {error && <p className="text-center text-red-500 font-semibold">{error}</p>}
         {!loading && !error && (
           <>

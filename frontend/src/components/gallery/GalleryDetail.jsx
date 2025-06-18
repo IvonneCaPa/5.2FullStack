@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import galleryService from '../../services/galleryService';
+import Loader from '../Loader';
 
 const backendUrl = 'http://localhost:8000';
 const PHOTOS_PER_PAGE = 6;
@@ -74,7 +75,7 @@ const GalleryDetail = () => {
     }
   };
 
-  if (loading) return <div className="loading">Cargando galería...</div>;
+  if (loading) return <Loader />;
   if (error) return <div className="error-message">{error}</div>;
   if (!gallery) return <div className="not-found">Galería no encontrada</div>;
 

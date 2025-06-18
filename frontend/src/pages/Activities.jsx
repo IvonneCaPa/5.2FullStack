@@ -3,6 +3,7 @@ import activityService from '../services/activityService';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
 import Modal from '../components/Modal';
+import Loader from '../components/Loader';
 
 const ACTIVITIES_PER_PAGE = 6;
 
@@ -146,6 +147,8 @@ const Activities = () => {
     const handleNextPage = () => {
         setCurrentPage((prev) => Math.min(prev + 1, totalPages));
     };
+
+    if (loading) return <Loader />;
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-orange-100 to-orange-300 py-8 px-2">

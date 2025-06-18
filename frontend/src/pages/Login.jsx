@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import Loader from '../components/Loader';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       const result = await login(email, password);
       if (result.success) {
@@ -20,8 +23,12 @@ const Login = () => {
       }
     } catch (err) {
       setError('Error al conectar con el servidor');
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading) return <Loader />;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200">
