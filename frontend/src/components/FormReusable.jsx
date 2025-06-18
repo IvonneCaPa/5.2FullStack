@@ -84,15 +84,25 @@ const FormReusable = ({
               ))}
             </select>
           ) : field.type === 'file' ? (
-            <input
-              type="file"
-              name={field.name}
-              accept={field.accept}
-              multiple={field.multiple}
-              onChange={(e) => handleChange(e, field)}
-              className="border border-orange-300 px-3 py-2 rounded w-full focus:ring-2 focus:ring-orange-400 focus:outline-none"
-              required={field.required}
-            />
+            <div className="w-full">
+              <label htmlFor={`file-input-${field.name}`} className="border border-orange-300 px-3 py-2 rounded w-full block text-center cursor-pointer bg-orange-50 hover:bg-orange-100 text-orange-600 font-semibold transition">
+                {formData[field.name] && formData[field.name].length > 0
+                  ? (formData[field.name].length === 1
+                      ? formData[field.name][0].name
+                      : `${formData[field.name].length} archivos seleccionados`)
+                  : 'Elegir archivo'}
+                <input
+                  type="file"
+                  name={field.name}
+                  accept={field.accept}
+                  multiple={field.multiple}
+                  onChange={(e) => handleChange(e, field)}
+                  className="hidden"
+                  required={field.required}
+                  id={`file-input-${field.name}`}
+                />
+              </label>
+            </div>
           ) : (
             <input
               type={field.type}

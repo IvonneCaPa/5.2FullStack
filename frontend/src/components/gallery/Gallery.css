@@ -13,6 +13,14 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  background: linear-gradient(90deg, #fb923c 0%, #f97316 100%);
+  color: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 16px rgba(251, 146, 60, 0.15);
+}
+
+.gallery-header h2 {
+  color: white;
 }
 
 .create-gallery-btn {
@@ -140,6 +148,8 @@
   position: relative;
   border-radius: 8px;
   overflow: hidden;
+  border: 2px solid transparent;
+  transition: box-shadow 0.2s, border 0.2s;
 }
 
 .image-card img {
@@ -373,7 +383,7 @@
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(251, 146, 60, 0.85) !important;
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -403,8 +413,8 @@
 
 .modal-title {
   font-size: 18px;
-  color: #333;
-  font-weight: 600;
+  color: #fb923c !important;
+  font-weight: 700;
   text-align: center;
   margin-bottom: 8px;
 }
@@ -424,4 +434,72 @@
 
 .modal-close:hover {
   color: #f44336;
+}
+
+/* Mejoras para el patrón naranja y visuales modernas */
+.gallery-actions .edit-btn,
+.gallery-actions .back-btn {
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(251, 146, 60, 0.08);
+}
+
+.gallery-actions .edit-btn {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.gallery-actions .edit-btn:hover {
+  background: #ffedd5;
+}
+
+.gallery-actions .back-btn {
+  background: #fff;
+  color: #fb923c;
+}
+
+.gallery-actions .back-btn:hover {
+  background: #fff7ed;
+}
+
+.gallery-info p {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fb923c;
+}
+
+.gallery-info svg {
+  color: #fb923c;
+}
+
+.image-card:hover {
+  border: 2px solid #fb923c;
+  box-shadow: 0 4px 16px rgba(251, 146, 60, 0.15);
+}
+
+.image-title {
+  background: rgba(251, 146, 60, 0.85) !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+.delete-btn {
+  background: #fb923c !important;
+  color: white !important;
+  font-weight: 600;
+  border: none;
+}
+
+.delete-btn:hover {
+  background: #ea580c !important;
+}
+
+.no-images {
+  color: #fb923c !important;
+  font-weight: 600;
+}
+
+.pagination button.active,
+.pagination button:focus {
+  background: #fb923c !important;
+  color: white !important;
 } 

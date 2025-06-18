@@ -29,7 +29,13 @@ const GalleryList = () => {
     try {
       setLoading(true);
       const data = await galleryService.getAllGalleries();
-      setGalleries(data);
+      // Ordenar de más reciente a más antigua por fecha
+      const sorted = [...data].sort((a, b) => {
+        const dateA = new Date(a.date || a.updated_at || a.created_at);
+        const dateB = new Date(b.date || b.updated_at || b.created_at);
+        return dateB - dateA;
+      });
+      setGalleries(sorted);
       setError(null);
     } catch (err) {
       setError('Error al cargar las galerías');

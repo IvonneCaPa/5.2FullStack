@@ -83,6 +83,16 @@ const galleryService = {
     } catch (error) {
       throw error;
     }
+  },
+
+  // Actualizar una foto (título, etc)
+  updatePhoto: async (photoId, data) => {
+    try {
+      const response = await api.put(`/photos/${photoId}`, data);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
   }
 };
 

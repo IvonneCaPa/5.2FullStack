@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import galleryService from '../../services/galleryService';
 import { useToast } from '../ToastProvider';
 import FormReusable from '../FormReusable';
+import Loader from '../Loader';
 import { FaImage, FaCalendarAlt, FaMapMarkerAlt, FaHeading } from 'react-icons/fa';
 
 const galleryFields = [
@@ -116,11 +117,11 @@ const GalleryForm = () => {
     }
   };
 
-  if (loading) return <div>Cargando...</div>;
+  if (loading) return <Loader />;
 
   return (
     <div className="gallery-form">
-      <h2>{id ? 'Editar Galería' : 'Nueva Galería'}</h2>
+      <h2 className="text-3xl font-bold text-orange-600 mb-8 drop-shadow text-center">{id ? 'Editar Galería' : 'Nueva Galería'}</h2>
       <FormReusable
         fields={galleryFields}
         initialValues={formData}
