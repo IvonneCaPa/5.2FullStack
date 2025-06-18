@@ -226,4 +226,13 @@ const Header = () => {
   );
 };
 
+// Header solo con el logo (para login)
+export const HeaderLogoOnly = () => {
+  return (
+    <header className="bg-orange-500 shadow-md w-full flex justify-center py-2">
+      <img src={logo} alt="Logo" className="h-12 object-contain" />
+    </header>
+  );
+};
+
 export default Header; 
