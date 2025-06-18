@@ -13,6 +13,9 @@ class UpdateUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
+        if ($this->has('role') && (!auth()->user() || auth()->user()->role !== 'admin')) {
+            return false;
+        }
         return true;
     }
 

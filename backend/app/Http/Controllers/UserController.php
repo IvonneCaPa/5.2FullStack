@@ -71,6 +71,10 @@ class UserController extends Controller
                 $validatedData['password'] = Hash::make($validatedData['password']);
             }
 
+            if (!auth()->user() || auth()->user()->role !== 'admin') {
+                unset($validatedData['role']);
+            }
+
             $user->update($validatedData);
 
             return response()->json([
