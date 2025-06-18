@@ -61,6 +61,7 @@ const Users = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [form, setForm] = useState(initialForm);
+  const [showForm, setShowForm] = useState(false);
   const [formError, setFormError] = useState('');
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -76,7 +77,9 @@ const Users = () => {
     setError(null);
     try {
       const data = await userService.getAllUsers();
-      setUsers(data.users);
+      // Ordenar alfabéticamente por nombre
+      const sortedUsers = [...data.users].sort((a, b) => a.name.localeCompare(b.name));
+      setUsers(sortedUsers);
     } catch (err) {
       setError('Error al obtener usuarios');
     } finally {
@@ -93,12 +96,14 @@ const Users = () => {
     });
     setEditingId(user.id);
     setFormError('');
+    setShowForm(true);
   };
 
   const handleCancelEdit = () => {
     setForm(initialForm);
     setEditingId(null);
     setFormError('');
+    setShowForm(false);
   };
 
   const handleSubmit = async (formData) => {
@@ -115,6 +120,7 @@ const Users = () => {
       }
       setForm(initialForm);
       await fetchUsers();
+      setShowForm(false);
     } catch (err) {
       setFormError('Error al ' + (editingId ? 'editar' : 'crear') + ' usuario');
       toast('Error al ' + (editingId ? 'editar' : 'crear') + ' usuario', 'error');
@@ -139,26 +145,37 @@ const Users = () => {
   const columns = [
     { label: 'Nombre', field: 'name' },
     { label: 'Email', field: 'email' },
-    { label: 'Rol', field: 'role' },
+    { 
+      label: 'Rol', 
+      field: 'role',
+      render: (user) => (
+        <span className="flex items-center gap-2">
+          {user.role === 'admin' ? <FaUserTag className="text-orange-500" /> : <FaUser className="text-orange-400" />} 
+          {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+        </span>
+      )
+    },
     {
       label: 'Acciones',
-      render: (user) => (
-        <>
-          <button
-            className="bg-orange-400 hover:bg-orange-500 text-white px-3 py-1 rounded mr-2 font-semibold transition flex items-center gap-2"
-            onClick={() => handleEdit(user)}
-            disabled={creating}
-          >
-            <FaEdit /> Editar
-          </button>
-          <button
-            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded font-semibold transition flex items-center gap-2"
-            onClick={() => { setUserToDelete(user); setModalOpen(true); }}
-            disabled={creating}
-          >
-            <FaTrash /> Eliminar
-          </button>
-        </>
+      render: (userRow) => (
+        isAdmin ? (
+          <>
+            <button
+              className="bg-orange-400 hover:bg-orange-500 text-white px-3 py-1 rounded mr-2 font-semibold transition flex items-center gap-2"
+              onClick={() => handleEdit(userRow)}
+              disabled={creating}
+            >
+              <FaEdit /> Editar
+            </button>
+            <button
+              className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded font-semibold transition flex items-center gap-2"
+              onClick={() => { setUserToDelete(userRow); setModalOpen(true); }}
+              disabled={creating}
+            >
+              <FaTrash /> Eliminar
+            </button>
+          </>
+        ) : null
       ),
     },
   ];
@@ -166,17 +183,33 @@ const Users = () => {
   if (loading) return <Loader />;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200 py-8 px-2">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200 py-8 px-2">
       <div className="w-full max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold text-orange-600 text-center mb-8 drop-shadow">Gestión de Usuarios</h1>
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+          <h1 className="text-3xl font-bold text-orange-600 drop-shadow mb-2 md:mb-0">Gestión de Usuarios</h1>
+          {isAdmin && (
+            <button
+              onClick={() => {
+                if (showForm) {
+                  handleCancelEdit();
+                } else {
+                  setShowForm(true);
+                }
+              }}
+              className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded font-semibold shadow transition"
+            >
+              {showForm ? 'Cancelar' : 'Nuevo Usuario'}
+            </button>
+          )}
+        </div>
         {/* Mensaje de no permisos */}
         {!isAdmin && (
           <div className="mb-6 p-4 bg-red-100 text-red-800 border border-red-300 rounded text-center font-semibold shadow">
-            No tienes permisos para acceder a esta sección.
+            No tienes permisos para crear, editar o eliminar usuarios.
           </div>
         )}
         {/* Formulario */}
-        {isAdmin && (
+        {showForm && isAdmin && (
           <FormReusable
             fields={userFields(editingId)}
             initialValues={form}
@@ -185,8 +218,8 @@ const Users = () => {
             loading={creating}
             error={formError}
             editingId={editingId}
-            cancelText={editingId ? 'Cancelar' : undefined}
-            onCancel={editingId ? handleCancelEdit : undefined}
+            cancelText={editingId ? 'Cancelar' : 'Cerrar'}
+            onCancel={handleCancelEdit}
           />
         )}
         {/* Tabla de usuarios */}
@@ -195,7 +228,7 @@ const Users = () => {
             No hay usuarios registrados.
           </div>
         ) : (
-          <Table data={users} columns={columns} rowsPerPage={10} />
+          <Table data={users} columns={columns} rowsPerPage={6} />
         )}
         {/* Modal de confirmación para eliminar */}
         <Modal

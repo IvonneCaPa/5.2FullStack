@@ -86,10 +86,12 @@ const Activities = () => {
     };
 
     const handleEdit = (activity) => {
+        // Formatear la fecha a YYYY-MM-DD para el input date
+        const dateOnly = activity.dateTime ? new Date(activity.dateTime).toISOString().slice(0, 10) : '';
         setFormData({
             title: activity.title,
             description: activity.description,
-            dateTime: activity.dateTime,
+            dateTime: dateOnly,
             site: activity.site || '',
         });
         setEditingId(activity.id);
@@ -153,20 +155,22 @@ const Activities = () => {
         {
             label: 'Acciones',
             render: (activity) => (
-                <>
-                    <button
-                        className="bg-orange-400 hover:bg-orange-500 text-white px-3 py-1 rounded mr-2 font-semibold transition flex items-center gap-2"
-                        onClick={() => handleEdit(activity)}
-                    >
-                        <FaEdit /> Editar
-                    </button>
-                    <button
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded font-semibold transition flex items-center gap-2"
-                        onClick={() => { setActivityToDelete(activity); setModalOpen(true); }}
-                    >
-                        <FaTrash /> Eliminar
-                    </button>
-                </>
+                isAdmin ? (
+                    <>
+                        <button
+                            className="bg-orange-400 hover:bg-orange-500 text-white px-3 py-1 rounded mr-2 font-semibold transition flex items-center gap-2"
+                            onClick={() => handleEdit(activity)}
+                        >
+                            <FaEdit /> Editar
+                        </button>
+                        <button
+                            className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded font-semibold transition flex items-center gap-2"
+                            onClick={() => { setActivityToDelete(activity); setModalOpen(true); }}
+                        >
+                            <FaTrash /> Eliminar
+                        </button>
+                    </>
+                ) : null
             ),
         },
     ];
@@ -181,8 +185,11 @@ const Activities = () => {
                     {isAdmin && (
                         <button
                             onClick={() => {
-                                setShowForm(!showForm);
-                                if (!showForm) handleCancelEdit();
+                                if (showForm) {
+                                    handleCancelEdit();
+                                } else {
+                                    setShowForm(true);
+                                }
                             }}
                             className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded font-semibold shadow transition"
                         >
