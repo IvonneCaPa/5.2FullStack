@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import galleryService from '../../services/galleryService';
+import { useToast } from '../ToastProvider';
 
 const GalleryForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const toast = useToast();
   const [formData, setFormData] = useState({
     title: '',
     date: '',
@@ -96,10 +98,12 @@ const GalleryForm = () => {
             await galleryService.uploadImages(id, images);
           } catch (uploadError) {
             setError('Error al subir las imágenes: ' + uploadError.message);
+            toast('Error al subir las imágenes: ' + uploadError.message, 'error');
             console.error('Error al subir imágenes:', uploadError);
             return;
           }
         }
+        toast('Galería actualizada correctamente', 'success');
       } else {
         const newGallery = await galleryService.createGallery(formattedData);
         if (images.length > 0) {
@@ -107,14 +111,17 @@ const GalleryForm = () => {
             await galleryService.uploadImages(newGallery.id, images);
           } catch (uploadError) {
             setError('Error al subir las imágenes: ' + uploadError.message);
+            toast('Error al subir las imágenes: ' + uploadError.message, 'error');
             console.error('Error al subir imágenes:', uploadError);
             return;
           }
         }
+        toast('Galería creada correctamente', 'success');
       }
       navigate('/galleries');
     } catch (err) {
       setError('Error al guardar la galería: ' + err.message);
+      toast('Error al guardar la galería: ' + err.message, 'error');
       console.error(err);
     } finally {
       setLoading(false);

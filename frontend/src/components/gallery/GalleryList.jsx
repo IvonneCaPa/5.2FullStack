@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import galleryService from '../../services/galleryService';
+import { useToast } from '../ToastProvider';
 
 const GALLERIES_PER_PAGE = 6;
 
@@ -9,10 +10,10 @@ const GalleryList = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
+  const toast = useToast();
   const [galleries, setGalleries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
   const [filteredGalleries, setFilteredGalleries] = useState([]);
@@ -47,16 +48,13 @@ const GalleryList = () => {
       try {
         setLoading(true);
         await galleryService.deleteGallery(gallery.id);
-        setSuccessMessage(`La galería "${gallery.title}" ha sido eliminada correctamente`);
+        toast(`La galería "${gallery.title}" ha sido eliminada correctamente`, 'success');
         await loadGalleries();
       } catch (err) {
-        setError('Error al eliminar la galería');
+        toast('Error al eliminar la galería', 'error');
         console.error(err);
       } finally {
         setLoading(false);
-        setTimeout(() => {
-          setSuccessMessage(null);
-        }, 3000);
       }
     }
   };
@@ -112,16 +110,6 @@ const GalleryList = () => {
           )}
         </div>
 
-        {successMessage && (
-          <div className="mb-4 p-2 bg-green-100 text-green-800 border border-green-300 rounded text-center font-semibold">
-            {successMessage}
-          </div>
-        )}
-        {error && (
-          <div className="mb-4 p-2 bg-red-100 text-red-800 border border-red-300 rounded text-center font-semibold">
-            {error}
-          </div>
-        )}
         {/* Mensaje de advertencia para usuarios sin permisos */}
         {!isAdmin && (
           <div className="mb-6 p-4 bg-red-100 text-red-800 border border-red-300 rounded text-center font-semibold shadow">
