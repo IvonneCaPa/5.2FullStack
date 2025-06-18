@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import activityService from '../services/activityService';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
+import Modal from '../components/Modal';
 
 const ACTIVITIES_PER_PAGE = 6;
 
@@ -23,6 +24,8 @@ const Activities = () => {
     const [search, setSearch] = useState('');
     const [filteredActivities, setFilteredActivities] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [activityToDelete, setActivityToDelete] = useState(null);
 
     useEffect(() => {
         loadActivities();
@@ -88,10 +91,9 @@ const Activities = () => {
         setShowForm(true);
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm('¿Estás seguro de que deseas eliminar esta actividad?')) return;
+    const handleDelete = async (activity) => {
         try {
-            await activityService.delete(id);
+            await activityService.delete(activity.id);
             await loadActivities();
             toast('Actividad eliminada correctamente', 'success');
         } catch (err) {
@@ -279,7 +281,7 @@ const Activities = () => {
                                                 Editar
                                             </button>
                                             <button
-                                                onClick={() => handleDelete(activity.id)}
+                                                onClick={() => { setActivityToDelete(activity); setModalOpen(true); }}
                                                 className="px-4 py-1 bg-red-500 hover:bg-red-600 text-white rounded font-semibold shadow transition"
                                             >
                                                 Eliminar
@@ -312,6 +314,13 @@ const Activities = () => {
                     </>
                 )}
             </div>
+            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Confirmar eliminación">
+                <p>¿Estás seguro de que deseas eliminar la actividad <b>{activityToDelete?.title}</b>?</p>
+                <div className="flex justify-end gap-4 mt-6">
+                    <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>Cancelar</button>
+                    <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded" onClick={async () => { await handleDelete(activityToDelete); setModalOpen(false); }}>Eliminar</button>
+                </div>
+            </Modal>
         </div>
     );
 };

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import galleryService from '../../services/galleryService';
 import { useToast } from '../ToastProvider';
+import Modal from '../Modal';
 
 const GALLERIES_PER_PAGE = 6;
 
@@ -17,6 +18,8 @@ const GalleryList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
   const [filteredGalleries, setFilteredGalleries] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [galleryToDelete, setGalleryToDelete] = useState(null);
 
   useEffect(() => {
     loadGalleries();
@@ -42,20 +45,16 @@ const GalleryList = () => {
   };
 
   const handleDelete = async (gallery) => {
-    const confirmMessage = `¿Estás seguro de que deseas eliminar la galería "${gallery.title}"?\n\nEsta acción eliminará permanentemente la galería y todas sus fotos asociadas.`;
-    
-    if (window.confirm(confirmMessage)) {
-      try {
-        setLoading(true);
-        await galleryService.deleteGallery(gallery.id);
-        toast(`La galería "${gallery.title}" ha sido eliminada correctamente`, 'success');
-        await loadGalleries();
-      } catch (err) {
-        toast('Error al eliminar la galería', 'error');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+    try {
+      setLoading(true);
+      await galleryService.deleteGallery(gallery.id);
+      toast(`La galería "${gallery.title}" ha sido eliminada correctamente`, 'success');
+      await loadGalleries();
+    } catch (err) {
+      toast('Error al eliminar la galería', 'error');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -163,7 +162,7 @@ const GalleryList = () => {
                         </button>
                         <button
                           className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded font-semibold transition"
-                          onClick={() => handleDelete(gallery)}
+                          onClick={() => { setGalleryToDelete(gallery); setModalOpen(true); }}
                         >
                           Eliminar
                         </button>
@@ -206,6 +205,13 @@ const GalleryList = () => {
           </>
         )}
       </div>
+      <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Confirmar eliminación">
+        <p>¿Estás seguro de que deseas eliminar la galería <b>{galleryToDelete?.title}</b>?</p>
+        <div className="flex justify-end gap-4 mt-6">
+          <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>Cancelar</button>
+          <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded" onClick={async () => { await handleDelete(galleryToDelete); setModalOpen(false); }}>Eliminar</button>
+        </div>
+      </Modal>
     </div>
   );
 };

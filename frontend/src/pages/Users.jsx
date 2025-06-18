@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { userService } from '../services/user';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/ToastProvider';
+import Modal from '../components/Modal';
 
 const initialForm = {
   name: '',
@@ -25,6 +26,8 @@ const Users = () => {
   const [search, setSearch] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -97,10 +100,9 @@ const Users = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar este usuario?')) return;
+  const handleDelete = async (user) => {
     try {
-      await userService.deleteUser(id);
+      await userService.deleteUser(user.id);
       await fetchUsers();
       toast('Usuario eliminado correctamente', 'success');
     } catch (err) {
@@ -262,7 +264,7 @@ const Users = () => {
                         {isAdmin ? (
                           <>
                             <button className="bg-orange-400 hover:bg-orange-500 text-white px-3 py-1 rounded mr-2 font-semibold transition" onClick={() => handleEdit(user)} disabled={creating}>Editar</button>
-                            <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded font-semibold transition" onClick={() => handleDelete(user.id)} disabled={creating}>Eliminar</button>
+                            <button className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded font-semibold transition" onClick={() => { setUserToDelete(user); setModalOpen(true); }} disabled={creating}>Eliminar</button>
                           </>
                         ) : (
                           <span className="text-gray-400">Sin permisos</span>
@@ -293,6 +295,13 @@ const Users = () => {
             </div>
           </>
         )}
+        <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Confirmar eliminación">
+          <p>¿Estás seguro de que deseas eliminar el usuario <b>{userToDelete?.name}</b> ({userToDelete?.email})?</p>
+          <div className="flex justify-end gap-4 mt-6">
+            <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded" onClick={() => setModalOpen(false)}>Cancelar</button>
+            <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded" onClick={async () => { await handleDelete(userToDelete); setModalOpen(false); }}>Eliminar</button>
+          </div>
+        </Modal>
       </div>
     </div>
   );
