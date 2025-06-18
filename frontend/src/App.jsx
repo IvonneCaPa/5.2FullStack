@@ -8,13 +8,19 @@ import Activities from './pages/Activities';
 import GalleryList from './components/gallery/GalleryList';
 import GalleryForm from './components/gallery/GalleryForm';
 import GalleryDetail from './components/gallery/GalleryDetail';
+import Header from './components/Header';
 import './components/gallery/Gallery.css';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
   if (loading) return <div>Cargando...</div>;
-  return user ? children : <Navigate to="/login" />;
+  return user ? (
+    <>
+      <Header />
+      {children}
+    </>
+  ) : <Navigate to="/login" />;
 };
 
 function App() {
