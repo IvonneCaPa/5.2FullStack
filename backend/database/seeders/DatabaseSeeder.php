@@ -15,10 +15,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Crear usuario administrador
+        $this->call([
+            AdminUserSeeder::class,
+        ]);
+
+        // Crear usuarios adicionales
         User::factory(4)->create();
 
+        // Crear actividades
         Activity::factory(20)->create();
 
+        // Crear galerías
         $this->call([
             GallerySeeder::class,
         ]);
