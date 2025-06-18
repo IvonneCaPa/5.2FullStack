@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { userService } from '../services/user';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/ToastProvider';
 
 const initialForm = {
   name: '',
@@ -13,6 +14,7 @@ const USERS_PER_PAGE = 10;
 
 const Users = () => {
   const { user: currentUser } = useAuth();
+  const toast = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,7 +22,6 @@ const Users = () => {
   const [formError, setFormError] = useState('');
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [successMsg, setSuccessMsg] = useState('');
   const [search, setSearch] = useState('');
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -80,14 +81,17 @@ const Users = () => {
       }
       if (editingId) {
         await userService.updateUser(editingId, form);
+        toast('Usuario editado correctamente', 'success');
         setEditingId(null);
       } else {
         await userService.createUser(form);
+        toast('Usuario creado correctamente', 'success');
       }
       setForm(initialForm);
       await fetchUsers();
     } catch (err) {
       setFormError('Error al ' + (editingId ? 'editar' : 'crear') + ' usuario');
+      toast('Error al ' + (editingId ? 'editar' : 'crear') + ' usuario', 'error');
     } finally {
       setCreating(false);
     }
@@ -98,10 +102,9 @@ const Users = () => {
     try {
       await userService.deleteUser(id);
       await fetchUsers();
-      setSuccessMsg('Usuario eliminado correctamente');
-      setTimeout(() => setSuccessMsg(''), 3000);
+      toast('Usuario eliminado correctamente', 'success');
     } catch (err) {
-      alert('Error al eliminar usuario');
+      toast('Error al eliminar usuario', 'error');
     }
   };
 
@@ -140,11 +143,6 @@ const Users = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-100 to-orange-200 py-8 px-2">
       <div className="w-full max-w-5xl mx-auto">
         <h1 className="text-3xl font-bold text-orange-600 text-center mb-8 drop-shadow">Gestión de Usuarios</h1>
-        {successMsg && (
-          <div className="mb-4 p-2 bg-green-100 text-green-800 border border-green-300 rounded text-center font-semibold">
-            {successMsg}
-          </div>
-        )}
         {/* Buscador */}
         <div className="mb-6 flex gap-2 max-w-xl mx-auto">
           <input

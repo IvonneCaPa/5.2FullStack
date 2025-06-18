@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import activityService from '../services/activityService';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../components/ToastProvider';
 
 const ACTIVITIES_PER_PAGE = 6;
 
 const Activities = () => {
     const { user } = useAuth();
     const isAdmin = user?.role === 'admin';
+    const toast = useToast();
     const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -21,7 +23,6 @@ const Activities = () => {
     const [search, setSearch] = useState('');
     const [filteredActivities, setFilteredActivities] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const [successMsg, setSuccessMsg] = useState('');
 
     useEffect(() => {
         loadActivities();
@@ -42,6 +43,7 @@ const Activities = () => {
             setError(null);
         } catch (err) {
             setError('Error al cargar las actividades');
+            toast('Error al cargar las actividades', 'error');
             console.error(err);
         } finally {
             setLoading(false);
@@ -61,13 +63,16 @@ const Activities = () => {
         try {
             if (editingId) {
                 await activityService.update(editingId, formData);
+                toast('Actividad editada correctamente', 'success');
             } else {
                 await activityService.create(formData);
+                toast('Actividad creada correctamente', 'success');
             }
             await loadActivities();
             resetForm();
         } catch (err) {
             setError('Error al guardar la actividad');
+            toast('Error al guardar la actividad', 'error');
             console.error(err);
         }
     };
@@ -88,10 +93,10 @@ const Activities = () => {
         try {
             await activityService.delete(id);
             await loadActivities();
-            setSuccessMsg('Actividad eliminada correctamente');
-            setTimeout(() => setSuccessMsg(''), 3000);
+            toast('Actividad eliminada correctamente', 'success');
         } catch (err) {
             setError('Error al eliminar la actividad');
+            toast('Error al eliminar la actividad', 'error');
             console.error(err);
         }
     };
@@ -179,12 +184,6 @@ const Activities = () => {
                         Buscar
                     </button>
                 </div>
-
-                {successMsg && (
-                    <div className="mb-4 p-2 bg-green-100 text-green-800 border border-green-300 rounded text-center font-semibold">
-                        {successMsg}
-                    </div>
-                )}
 
                 {showForm && isAdmin && (
                     <form onSubmit={handleSubmit} className="mb-10 bg-white rounded-xl shadow-lg p-8 border border-orange-200 w-full">
